@@ -1,0 +1,32 @@
+server:
+  port: 8800
+  servlet:
+    session:
+      cookie:
+        max-age: 1440m
+      timeout: 60m
+    context-path: /api
+  error:
+    include-message: always
+
+logging:
+  config: classpath:log4j2.yml
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/calculator
+    username: calculator
+    password: calculator
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQL95Dialect
+    hibernate:
+      ddl-auto: none
+    # Explicitly define it as false, being true is an anti pattern
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-calculator-master.xml
+
+aios:
+  workingDirectory: .school-calculator

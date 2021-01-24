@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+  <changeSet id="0.0.1-01" author="Albiona Cauli">
+    <comment>
+      Initialize users table
+    </comment>
+    <createTable tableName="users">
+      <column name="id" type="INT8" autoIncrement="true">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="name" type="NVARCHAR(128)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="last_name" type="NVARCHAR(128)">
+      </column>
+      <column name="mobile" type="VARCHAR(20)"></column>
+      <column name="email" type="VARCHAR(256)">
+        <constraints nullable="false" unique="true" uniqueConstraintName="users_modified_by_key"/>
+      </column>
+      <column name="address" type="NVARCHAR(256)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_by" type="INT8">
+        <constraints referencedTableName="users" referencedColumnNames="id" foreignKeyName="fk_user_create_user_id"/>
+      </column>
+      <column name="created_on" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+        <constraints nullable="false"/>
+      </column>
+      <column name="modified_on" type="TIMESTAMP WITH TIME ZONE"/>
+      <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+      </column>
+      <column name="modified_by" type="INT8">
+        <constraints referencedTableName="users" referencedColumnNames="id" foreignKeyName="fk_user_update_user_id"/>
+      </column>
+      <column name="job_position" type="NVARCHAR(256)">
+      </column>
+      <column name="salary" type="NUMERIC">
+      </column>
+    </createTable>
+  </changeSet>
+</databaseChangeLog>

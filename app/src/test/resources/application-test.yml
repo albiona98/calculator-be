@@ -1,0 +1,12 @@
+# Test configurations profile for partial override of the default configurations
+# To use it add @ActiveProfiles("test") on any @SpringBootTest
+
+# Embedded H2 database
+spring:
+  datasource:
+    url: jdbc:h2:mem:db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
