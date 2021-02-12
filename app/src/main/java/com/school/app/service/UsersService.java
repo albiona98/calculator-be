@@ -6,6 +6,7 @@ import com.school.app.db.repository.UsersRepository;
 import com.school.app.exception.ApiException;
 import com.school.app.exception.ResourceNotFoundException;
 import com.school.app.mapper.UserMapper;
+import com.school.app.model.CalculatedResult;
 import com.school.app.model.Taxes;
 import com.school.app.model.request.SalaryRequest;
 import com.school.app.model.request.UserSearchRequest;
@@ -37,30 +38,6 @@ public class UsersService {
   }
 
   /**
-   * Performs search for {@link UserEntity} using the id as the search criteria.
-   *
-   * @param id a Long containing the username of the user that is going to be searched.
-   * @return the found {@link User} or {@link Optional#empty()}.
-   */
-
-  @Transactional
-  public User findUserById(Long id) {
-    return usersRepository.findById(id).map(userMapper::fromEntity).orElseThrow(() ->
-        new ResourceNotFoundException(id));
-  }
-
-  /**
-   * Get all users that are present in the database
-   *
-   * @return List all users
-   */
-  @Transactional
-  public List<User> getAllUsers() {
-    return usersRepository.findAll().stream().map(userMapper::fromEntity).collect(Collectors.toList());
-  }
-
-
-  /**
    * Performs user creation for {@link UserEntity} using the provided criteria.
    *
    * @param userCreateRequest request containing the insertion criteria related to {@link UserEntity}.
@@ -78,7 +55,7 @@ public class UsersService {
    * @return the calculated salary {@link Double}.
    */
   @Transactional
-  public Double calculateSalary(SalaryRequest salaryRequest) {
+  public CalculatedResult calculateSalary(SalaryRequest salaryRequest) {
     if (salaryRequest.getNetSalary() != null) {
       return calculateGrossSalary(salaryRequest.getNetSalary());
     } else if (salaryRequest.getGrossSalary() != null) {
@@ -90,8 +67,9 @@ public class UsersService {
 
   /**
    * Gets all users based on search request
+   *
    * @param userSearchRequest object containing filtering information
-   * @param pageable object containing data about items/page and ordering {@link UserSearchRequest}.
+   * @param pageable          object containing data about items/page and ordering {@link UserSearchRequest}.
    * @return matched users {@link Page<User>}.
    */
   @Transactional
@@ -99,27 +77,40 @@ public class UsersService {
     return usersRepository.findUserBySearchCriteria(userSearchRequest, pageable).map(userMapper::fromEntity);
   }
 
-  private Double calculateGrossSalary(Double netSalary) {
-    double salaryWithoutIncomeTax = calculateIncomeTax(netSalary);
-    return netSalary + salaryWithoutIncomeTax + netSalary * Taxes.EMPLOYEE_SOCIAL_CONTRIBUTION.getCoefficient()
-        + netSalary * Taxes.EMPLOYER_SOCIAL_CONTRIBUTION.getCoefficient()
-        + netSalary * Taxes.HEALTH_CONTRIBUTION.getCoefficient();
+  private CalculatedResult calculateGrossSalary(Double netSalary) {
+    CalculatedResult calculatedResult = new CalculatedResult();
+    calculatedResult.setNetSalary(netSalary);
+    calculatedResult.setEmployeeSocialContribution(netSalary * Taxes.EMPLOYEE_SOCIAL_CONTRIBUTION.getCoefficient());
+    calculatedResult.setHealthContribution(netSalary * Taxes.HEALTH_CONTRIBUTION.getCoefficient());
+    calculatedResult.setIncomeTax(calculateIncomeTax(netSalary));
+    calculatedResult.setEmployerSocialContribution(netSalary * Taxes.EMPLOYER_SOCIAL_CONTRIBUTION.getCoefficient());
+    calculatedResult.setGrossSalary(
+        calculatedResult.getNetSalary() +  calculatedResult
+            .getEmployerSocialContribution() + calculatedResult.getHealthContribution() + calculatedResult
+            .getIncomeTax());
+    return calculatedResult;
   }
 
-  private Double calculateNetSalary(Double grossSalary) {
-    double salaryWithoutIncomeTax = calculateIncomeTax(grossSalary);
-    return grossSalary - salaryWithoutIncomeTax - grossSalary * Taxes.EMPLOYEE_SOCIAL_CONTRIBUTION
-        .getCoefficient() - grossSalary * Taxes.EMPLOYER_SOCIAL_CONTRIBUTION.getCoefficient()
-        - grossSalary * Taxes.HEALTH_CONTRIBUTION.getCoefficient();
+  private CalculatedResult calculateNetSalary(Double grossSalary) {
+    CalculatedResult calculatedResult = new CalculatedResult();
+    calculatedResult.setGrossSalary(grossSalary);
+    calculatedResult.setEmployeeSocialContribution(grossSalary * Taxes.EMPLOYEE_SOCIAL_CONTRIBUTION.getCoefficient());
+    calculatedResult.setHealthContribution(grossSalary * Taxes.HEALTH_CONTRIBUTION.getCoefficient());
+    calculatedResult.setIncomeTax(calculateIncomeTax(grossSalary));
+    calculatedResult.setEmployerSocialContribution(grossSalary * Taxes.EMPLOYER_SOCIAL_CONTRIBUTION.getCoefficient());
+    calculatedResult.setNetSalary(
+        calculatedResult.getGrossSalary() - calculatedResult.getEmployerSocialContribution()  - calculatedResult.getHealthContribution() - calculatedResult
+            .getIncomeTax());
+    return calculatedResult;
   }
 
   private Double calculateIncomeTax(Double salary) {
     if (salary <= 30000) {
       return salary * Taxes.INCOME_TAX_0.getCoefficient();
     } else if (salary <= 150000) {
-      return salary - salary * Taxes.INCOME_TAX_1.getCoefficient();
+      return  salary * Taxes.INCOME_TAX_1.getCoefficient();
     } else {
-      return salary - salary * Taxes.INCOME_TAX_2.getCoefficient();
+      return salary * Taxes.INCOME_TAX_2.getCoefficient();
     }
   }
 }

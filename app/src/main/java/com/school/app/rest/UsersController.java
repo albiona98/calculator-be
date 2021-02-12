@@ -1,5 +1,6 @@
 package com.school.app.rest;
 
+import com.school.app.model.CalculatedResult;
 import com.school.app.model.request.SalaryRequest;
 import com.school.app.model.request.UserSearchRequest;
 import com.school.app.model.user.User;
@@ -31,16 +32,6 @@ public class UsersController {
     this.usersService = usersService;
   }
 
-  /**
-   * Performs search for {@link User} using the id as the search criteria. This search is used only by administrator
-   *
-   * @param id a Long containing the id of the user that is going to be searched.
-   * @return the found {@link User} or {@link Optional#empty()}.
-   */
-  @GetMapping("/{id}")
-  public User findById(@PathVariable Long id) {
-    return usersService.findUserById(id);
-  }
 
   /**
    * Handles search request of ausers based on search request
@@ -72,7 +63,7 @@ public class UsersController {
    * @return the calculated salary {@link Double}.
    */
   @PutMapping("/calculate")
-  public Double calculateSalary(@RequestBody SalaryRequest salaryRequest) {
+  public CalculatedResult calculateSalary(@RequestBody SalaryRequest salaryRequest) {
     return usersService.calculateSalary(salaryRequest);
   }
 }
